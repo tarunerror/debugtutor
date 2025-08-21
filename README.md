@@ -4,6 +4,8 @@
 
 ## ✨ Features
 
+- **🔐 Google Authentication**: Secure sign-in with Google OAuth via Supabase
+- **👤 User Profiles**: Display user information (name, email, avatar) after login
 - **🔍 Smart Code Analysis**: Uses Tree-sitter for syntax parsing and error detection
 - **🤖 AI-Powered Debugging**: Leverages OpenRouter's DeepSeek model for intelligent error explanations
 - **💬 Interactive Tutoring**: Conversational interface for follow-up questions
@@ -17,6 +19,7 @@
 
 - Python 3.8 or higher
 - OpenRouter API key (free tier available)
+- Supabase account (for Google authentication)
 
 ### Installation
 
@@ -31,12 +34,22 @@
    ```
 
 3. **Configure environment variables**:
-   - Copy the `.env` file and add your OpenRouter API key:
+   - Copy `.env.example` to `.env` and fill in your credentials:
    ```bash
-   # Edit the .env file
-   OPENROUTER_API_KEY=your_actual_api_key_here
+   cp .env.example .env
    ```
-   - Get your API key from [OpenRouter](https://openrouter.ai/settings/keys)
+   - Edit the `.env` file with your actual values:
+   ```bash
+   # OpenRouter API (for AI features)
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
+   
+   # Supabase (for Google authentication)
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=your_supabase_anon_key_here
+   REDIRECT_URL=http://localhost:8501
+   ```
+   - Get your OpenRouter API key from [OpenRouter](https://openrouter.ai/settings/keys)
+   - Create a Supabase project at [Supabase](https://supabase.com) and enable Google OAuth
 
 4. **Run the application**:
    ```bash

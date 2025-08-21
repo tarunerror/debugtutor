@@ -364,6 +364,122 @@ class AdvancedComponents:
                 for action in recent_actions:
                     st.text(f"• {action['type']} ({action.get('language', 'N/A')})")
 
+class GitHubComponents:
+    """GitHub-related UI components"""
+    
+    @staticmethod
+    def display_github_button(repo_url: str = "https://github.com/your-username/debugtutor"):
+        """Display GitHub repository button"""
+        st.markdown("""
+        <style>
+        .github-button {
+            background: linear-gradient(135deg, #24292e 0%, #1a1e22 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(36, 41, 46, 0.3);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .github-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(36, 41, 46, 0.4);
+            background: linear-gradient(135deg, #2f363d 0%, #24292e 100%);
+        }
+        
+        .github-icon {
+            width: 20px;
+            height: 20px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # GitHub button with icon
+        st.markdown(f"""
+        <a href="{repo_url}" target="_blank" class="github-button">
+            <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            View on GitHub
+        </a>
+        """, unsafe_allow_html=True)
+
+class AuthComponents:
+    """Authentication-related UI components"""
+    
+    @staticmethod
+    def display_sign_in_button():
+        """Display Google Sign In button"""
+        st.markdown("""
+        <div style="text-align: center; padding: 2rem;">
+            <h3>🔐 Sign In Required</h3>
+            <p>Please sign in with your Google account to access DebugTutor</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("🔑 Sign In with Google", type="primary", use_container_width=True):
+                return True
+        return False
+    
+    @staticmethod
+    def display_user_profile(user: Dict[str, Any]):
+        """Display user profile section"""
+        st.markdown("### 👤 User Profile")
+        
+        col1, col2 = st.columns([1, 3])
+        
+        with col1:
+            if user.get('avatar_url'):
+                st.image(user['avatar_url'], width=80)
+            else:
+                st.markdown("""
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                           border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                           color: white; font-size: 2rem; font-weight: bold;">
+                    {initial}
+                </div>
+                """.format(initial=user.get('name', 'U')[0].upper()), unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="status-card">
+                <h4>👋 Welcome, {user.get('name', 'User')}!</h4>
+                <p><strong>Email:</strong> {user.get('email', 'N/A')}</p>
+                <p><strong>Provider:</strong> {user.get('provider', 'Google').title()}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if st.button("🚪 Sign Out", type="secondary"):
+            return True
+        return False
+    
+    @staticmethod
+    def display_auth_status():
+        """Display authentication status in sidebar"""
+        from auth import auth_manager
+        
+        if auth_manager.is_authenticated():
+            user = auth_manager.get_current_user()
+            st.sidebar.markdown("### 👤 Signed In")
+            st.sidebar.markdown(f"**{user.get('name', 'User')}**")
+            st.sidebar.markdown(f"_{user.get('email', 'N/A')}_")
+            
+            if st.sidebar.button("🚪 Sign Out", key="sidebar_signout"):
+                auth_manager.sign_out()
+                st.rerun()
+        else:
+            st.sidebar.markdown("### 🔐 Authentication")
+            st.sidebar.info("Sign in to access all features")
+
 def track_user_action(action_type: str, language: str = None, code_lines: int = 0):
     """Helper function to track user actions"""
     session_analytics.track_action(action_type, language, code_lines)

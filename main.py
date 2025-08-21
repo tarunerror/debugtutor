@@ -3,12 +3,17 @@ import os
 from typing import Optional, Dict, Any
 import json
 import time
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 from parser import CodeParser
 from llm_utils import LLMProcessor
 from config import config_manager
 from logger import app_logger
-from ui_components import ModernUI, AdvancedComponents, track_user_action
+from ui_components import ModernUI, AdvancedComponents, AuthComponents, GitHubComponents, track_user_action
 from analytics import session_analytics
+from auth import auth_manager
 
 # Configure Streamlit page
 st.set_page_config(
@@ -17,9 +22,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        'Get Help': 'https://github.com/debugtutor/help',
-        'Report a bug': 'https://github.com/debugtutor/issues',
-        'About': 'DebugTutor v2.0 - AI-powered code debugging assistant'
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
     }
 )
 
@@ -311,13 +316,56 @@ def display_follow_up():
                     app_logger.log_error(e, "follow_up_question")
                     st.error(f"❌ Error processing follow-up: {str(e)}")
 
+def handle_authentication():
+    """Handle authentication flow"""
+    # Check for OAuth callback parameters
+    query_params = st.query_params
+    
+    if 'code' in query_params and not auth_manager.is_authenticated():
+        code = query_params['code']
+        if auth_manager.handle_oauth_callback(code):
+            st.success("✅ Successfully signed in!")
+            st.query_params.clear()  # Clear URL parameters
+            st.rerun()
+    
+    # Handle sign in button click
+    if not auth_manager.is_authenticated():
+        if AuthComponents.display_sign_in_button():
+            auth_url = auth_manager.get_google_auth_url()
+            if auth_url:
+                st.markdown(f'<meta http-equiv="refresh" content="0; url={auth_url}">', unsafe_allow_html=True)
+                st.info("Redirecting to Google for authentication...")
+            else:
+                st.error("❌ Failed to initiate Google authentication. Please check your Supabase configuration.")
+        return False
+    
+    return True
+
+def display_user_profile_section():
+    """Display user profile section if authenticated"""
+    if auth_manager.is_authenticated():
+        user = auth_manager.get_current_user()
+        st.markdown("---")
+        
+        with st.expander("👤 User Profile", expanded=False):
+            if AuthComponents.display_user_profile(user):
+                auth_manager.sign_out()
+                st.rerun()
+
 def main():
     """Main application function"""
     initialize_components()
     display_header()
     
+    # Handle authentication
+    if not handle_authentication():
+        return
+    
     # Enhanced Sidebar
     with st.sidebar:
+        # Authentication status
+        AuthComponents.display_auth_status()
+        
         st.markdown("---")
         
         # Feature Showcase
@@ -332,6 +380,14 @@ def main():
         
         # Performance Monitor
         AdvancedComponents.display_performance_monitor()
+        
+        st.markdown("---")
+        
+        # GitHub Repository Button
+        st.markdown("### 🔗 Repository")
+        GitHubComponents.display_github_button("https://github.com/tarunerror/debugtutor")
+    
+    # User profile section removed per user request
     
     # Main content
     code_input, selected_language = display_code_input()
